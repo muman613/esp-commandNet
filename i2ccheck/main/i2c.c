@@ -1,33 +1,36 @@
 
 #include "i2c.h"
 #include <driver/i2c.h>
-#include <i2cdev.h>
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <i2cdev.h>
+#include <ssd1306.h>
 
 static gpio_num_t i2c_gpio_sda = CONFIG_EXAMPLE_I2C_MASTER_SDA;
 static gpio_num_t i2c_gpio_scl = CONFIG_EXAMPLE_I2C_MASTER_SCL;
 static uint32_t i2c_frequency = 100000;
 static i2c_port_t i2c_port = I2C_NUM_0;
 
+static SSD1306_t dev;
+
 SemaphoreHandle_t i2c_mutex;
 
 const char *TAG = "i2c";
 
-static esp_err_t i2c_master_driver_initialize(void) {
-  i2c_config_t conf = {
-      .mode = I2C_MODE_MASTER,
-      .sda_io_num = i2c_gpio_sda,
-      .sda_pullup_en = GPIO_PULLUP_ENABLE,
-      .scl_io_num = i2c_gpio_scl,
-      .scl_pullup_en = GPIO_PULLUP_ENABLE,
-      .master.clk_speed = i2c_frequency,
-      // .clk_flags = 0,          /*!< Optional, you can use I2C_SCLK_SRC_FLAG_*
-      // flags to choose i2c source clock here. */
-  };
-  return i2c_param_config(i2c_port, &conf);
-}
+// static esp_err_t i2c_master_driver_initialize(void) {
+//   i2c_config_t conf = {
+//       .mode = I2C_MODE_MASTER,
+//       .sda_io_num = i2c_gpio_sda,
+//       .sda_pullup_en = GPIO_PULLUP_ENABLE,
+//       .scl_io_num = i2c_gpio_scl,
+//       .scl_pullup_en = GPIO_PULLUP_ENABLE,
+//       .master.clk_speed = i2c_frequency,
+//       // .clk_flags = 0,          /*!< Optional, you can use I2C_SCLK_SRC_FLAG_*
+//       // flags to choose i2c source clock here. */
+//   };
+//   return i2c_param_config(i2c_port, &conf);
+// }
 
 void perform_i2c_scan_bus(esp_err_t *scan, size_t size) {
   if (size < 128) {
@@ -86,6 +89,13 @@ void i2c_scan_task(void *pvParameters) {
   }
 }
 
+void init_display() {
+  i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
+  ESP_LOGI(TAG, "Panel is 128x64");
+  ssd1306_init(&dev, 128, 64);
+  ssd1306_clear_screen(&dev, false);
+}
+
 void init_i2c(void) {
   ESP_LOGI(TAG, "init_i2c");
 
@@ -94,6 +104,7 @@ void init_i2c(void) {
   ESP_LOGI(TAG, "I2C SDA = %d", CONFIG_EXAMPLE_I2C_MASTER_SDA);
   ESP_LOGI(TAG, "I2C SCL = %d", CONFIG_EXAMPLE_I2C_MASTER_SCL);
 
+  // init_display();
 #if 0
   ESP_LOGD(TAG, "Initializing i2c...");
   i2c_driver_install(i2c_port, I2C_MODE_MASTER, I2C_MASTER_RX_BUF_DISABLE,

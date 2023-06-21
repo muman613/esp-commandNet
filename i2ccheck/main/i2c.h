@@ -12,6 +12,6 @@
 
 void init_i2c(void);
 void i2c_scan_task(void *pvParameters);
-
+void init_display();
 
 #endif // __I2C_H__

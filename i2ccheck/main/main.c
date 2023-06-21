@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define ENABLE_TEMP_TASK 1
-#define ENABLE_SCAN_TASK 1
+// #define ENABLE_SCAN_TASK 1
 
 static const char *TAG = "i2ccheck";
 
@@ -68,7 +68,6 @@ void temp_task(void *pvParameters) {
 void app_main(void) {
   ESP_LOGD(TAG, "app_main entered!");
   BaseType_t xReturned;
-  TaskHandle_t xTaskHandle1 = NULL, xTaskHandle2 = NULL;
 
   // #ifndef NDEBUG
   //   ESP_LOGD(TAG, "I2C SDA = %d", CONFIG_EXAMPLE_I2C_MASTER_SDA);
@@ -76,8 +75,11 @@ void app_main(void) {
   // #endif
 
   init_i2c();
+  // init_display();
 
 #ifdef ENABLE_TEMP_TASK
+  TaskHandle_t xTaskHandle1 = NULL;
+
   xReturned = xTaskCreate(temp_task, "temp_task", configMINIMAL_STACK_SIZE * 8,
                           (void *)NULL, 0, &xTaskHandle1);
   if (xReturned != pdPASS) {
@@ -85,6 +87,8 @@ void app_main(void) {
   }
 #endif // ENABLE_TEMP_TASK
 #ifdef ENABLE_SCAN_TASK
+  TaskHandle_t xTaskHandle2 = NULL;
+
   xReturned = xTaskCreate(i2c_scan_task, "i2c_scan_task", 4096, (void *)NULL, 5,
                           &xTaskHandle2);
   if (xReturned != pdPASS) {
